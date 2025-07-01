@@ -4,8 +4,11 @@ from .store import Formatstore, Store
 import msgpack
 
 class DataStore:
-    def __str__(self):
+    def __repr__(self):
         return f"{feed_dict({}, self)}"
+
+    def __str__(self):
+        return self.__repr__()
 
     def __setattr__(self, name, value):
         if isinstance(value, dict):
@@ -43,9 +46,15 @@ class DataStore:
 def feed_class(data_class, data):
     for key, value in data.items():
         if isinstance(value, dict):
-            data_deep = DataStore()
-            value_deep = feed_class(data_deep, value)
-            setattr(data_class, key, value_deep)
+            setattr(data_class, key, feed_class(DataStore(), value))
+        elif isinstance(value, list):
+            new_list = []
+            for item in value:
+                if isinstance(item, dict):
+                    new_list.append(feed_class(DataStore(), item))
+                else:
+                    new_list.append(item)
+            setattr(data_class, key, new_list)
         else:
             setattr(data_class, key, value)
     return data_class
@@ -53,10 +62,14 @@ def feed_class(data_class, data):
 
 #Ajouter les données d'une Class dans un dictionnaire
 def feed_dict(data_dict, data):
-    #Suppression de self.__data qui sert uniquement pour l'affichage
     for key, value in data.__dict__.items():
         if isinstance(value, DataStore):
             data_dict[key] = feed_dict({}, value)
+        elif isinstance(value, list):
+            data_dict[key] = [
+                feed_dict({}, item) if isinstance(item, DataStore) else item
+                for item in value
+            ]
         else:
             data_dict[key] = value
     return data_dict

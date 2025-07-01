@@ -28,11 +28,14 @@ class Store:
         self.format = format
 
         if protected and not password:
-            password = secure_input("Password: ")
+            password = secure_input("Password store: ")
         self.password = password.encode() if password else None
 
         # Si le fichier n'existe pas, créez-le avec une liste vide
         if self.filename:
+            if os.path.dirname(self.filename) and not os.path.exists(os.path.dirname(self.filename)):
+                os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+
             #Impossible d'écrire directement un dictionnaire dans un fichier
             if self.format is Formatstore.to_dict:
                 raise ValueError(f"Format {self.format} unsupported with output file")
@@ -73,6 +76,7 @@ class Store:
         encrypted_data = encryptor.update(data) + encryptor.finalize()
         return salt + iv + encrypted_data
 
+
     def decrypt(self, data):
         salt = data[:16]
         iv = data[16:32]
@@ -90,36 +94,83 @@ class Store:
         decryptor = cipher.decryptor()
         return decryptor.update(encrypted_data) + decryptor.finalize()
 
+
     def push(self, data_name, data, overwrite=True):
         existing_data = self._read_file()
-        
-        # Ajouter les nouvelles données
-        if data_name in existing_data and not overwrite:
+
+        keys = data_name.split('.')  # Exemple: ["config", "app"]
+        d = existing_data
+
+        # Naviguer dans le dictionnaire en créant les sous-dicts si besoin
+        for key in keys[:-1]:
+            if key not in d or not isinstance(d[key], dict):
+                d[key] = {}
+            d = d[key]
+
+        last_key = keys[-1]
+
+        if last_key not in d or overwrite:
+            # Si data est un dict, fusionner dans la hiérarchie existante
+            if isinstance(data, dict):
+                if last_key not in d or not isinstance(d[last_key], dict):
+                    d[last_key] = {}
+                # Intégrer chaque clé/valeur dans la hiérarchie
+                for k, v in data.items():
+                    d[last_key][k] = v
+            else:
+                d[last_key] = self._serialize(data)
+        else:
             raise NameError(f"data_name '{data_name}' already exists")
 
-        existing_data[data_name] = self._serialize(data)
-        
         self._write_file(existing_data)
+
 
     def pull(self, data_name):
         existing_data = self._read_file()
-        
-        # Désérialiser les données
-        if data_name in existing_data:
-            return self._deserialize(existing_data[data_name])
+        keys = data_name.split('.')
+        d = existing_data
+        for key in keys:
+            if not isinstance(d, dict) or key not in d:
+                return None
+            d = d[key]
+        return self._deserialize(d)
 
-        return None
 
     def erase(self, data_name):
         existing_data = self._read_file()
         
-        # Désérialiser les données
-        if data_name in existing_data:
-            del existing_data[data_name]
+        keys = data_name.split('.')
+        d = existing_data
+
+        # Naviguer dans le dict pour atteindre la clé à supprimer
+        for key in keys[:-1]:
+            if key not in d or not isinstance(d[key], dict):
+                return False  # chemin inexistant
+            d = d[key]
+
+        last_key = keys[-1]
+        if last_key in d:
+            del d[last_key]
             self._write_file(existing_data)
             return True
 
         return False
+
+
+    def list(self):
+        existing_data = self._read_file()
+        
+        def collect_keys(d, prefix=''):
+            keys = []
+            for k, v in d.items():
+                path = f"{prefix}.{k}" if prefix else k
+                keys.append(path)
+                if isinstance(v, dict):
+                    keys.extend(collect_keys(v, path))
+            return keys
+
+        return collect_keys(existing_data)
+
 
     def _read_file(self):
         # Lire les données existantes depuis un fichier ou self._data
@@ -132,12 +183,15 @@ class Store:
         if self.password:
             file_content = self.decrypt(file_content)
 
-        if self.format is Formatstore.to_yaml:
-            existing_data = yaml.load(file_content, Loader=yaml.SafeLoader)
-        elif self.format is Formatstore.to_binary:
-            existing_data = msgpack.unpackb(file_content, raw=False, strict_map_key=False)
-        elif self.format is Formatstore.to_dict:
-            existing_data = self._data
+        try:
+            if self.format is Formatstore.to_yaml:
+                existing_data = yaml.load(file_content, Loader=yaml.SafeLoader)
+            elif self.format is Formatstore.to_binary:
+                existing_data = msgpack.unpackb(file_content, raw=False, strict_map_key=False)
+            elif self.format is Formatstore.to_dict:
+                existing_data = self._data
+        except Exception as e:
+            raise ValueError("Data unpacking failed. Possibly wrong password or corrupted data.") from e
 
         return existing_data
 

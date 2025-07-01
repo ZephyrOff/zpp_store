@@ -69,6 +69,12 @@ new_person = Person("Bob", 35, "Paris")
 with zpp_store.Store() as vault:
 	vault.push("utilisateur_bob", new_person)
 ```
+
+Possibilité de travailler avec des données hiérarchiques en séparant les clés par un point.
+```python
+vault.push("config.app.data", "data_line")  #Ce qui donnera {"config": {"app": {"data": "data_line"}}}
+```
+
 <br>
 
 ###  Désérialisation de données
@@ -102,6 +108,17 @@ with zpp_store.Store() as vault:
 
 La méthode retournera alors **True** si une donnée a été supprimée, sinon **False**.
 <br>
+
+### Liste des clés
+
+Il est possible de lister l'ensemble des clés disponibles dans un store.
+
+```python
+import zpp_store
+
+with zpp_store.Store() as vault:
+	print(vault.list()) # Affiche: ['app', 'app.config', 'app.users']
+```
 
 ### Structuration de données
 
