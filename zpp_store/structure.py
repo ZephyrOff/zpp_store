@@ -22,14 +22,29 @@ class DataStore:
     def __getattribute__(self, name):
         if " " in name:
             name = name.replace(" ", "_")
-        return super().__getattribute__(name)
-
+        try:
+            return super().__getattribute__(name)
+        
+        except AttributeError:
+            return None
 
     def __delattr__(self, name):
         if " " in name:
             name = name.replace(" ", "_")
 
         super().__delattr__(name)
+
+    def __iter__(self):
+        return iter(self.__dict__.items())
+
+    def items(self):
+        return self.__dict__.items()
+
+    def keys(self):
+        return self.__dict__.keys()
+
+    def values(self):
+        return self.__dict__.values()
 
 
     #Construit un hash de la class sérialisée

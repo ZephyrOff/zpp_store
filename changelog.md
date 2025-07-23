@@ -13,3 +13,6 @@
 - Ajout de la hiérarchisation des données dans la class Store
 - Contrôle du bon déchiffrement des données du Store
 - Correction lors de la récupération des données dans le Datastore
+
+## [0.3.0] - 2025-07-23
+- Ajout de la logique des dictionnaires dans structure
