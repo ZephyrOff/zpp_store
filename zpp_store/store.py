@@ -125,8 +125,10 @@ class Store:
         self._write_file(existing_data)
 
 
-    def pull(self, data_name):
+    def pull(self, data_name=None):
         existing_data = self._read_file()
+        if data_name is None:
+            return self._deserialize(existing_data)
         keys = data_name.split('.')
         d = existing_data
         for key in keys:
@@ -159,17 +161,24 @@ class Store:
 
     def list(self):
         existing_data = self._read_file()
-        
+
         def collect_keys(d, prefix=''):
             keys = []
             for k, v in d.items():
+                # Ignorer les métadonnées internes
+                if isinstance(k, str) and k.startswith('_'):
+                    continue
+
                 path = f"{prefix}.{k}" if prefix else k
-                keys.append(path)
                 if isinstance(v, dict):
                     keys.extend(collect_keys(v, path))
+                else:
+                    keys.append(path)
             return keys
 
-        return collect_keys(existing_data)
+        # Désérialiser d’abord
+        deserialized = self._deserialize(existing_data)
+        return collect_keys(deserialized)
 
 
     def _read_file(self):

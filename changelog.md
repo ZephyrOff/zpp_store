@@ -16,3 +16,7 @@
 
 ## [0.3.0] - 2025-07-23
 - Ajout de la logique des dictionnaires dans structure
+
+## [0.4.0] - 2025-08-01
+- Modification du listing des clés
+- Ajustement de code
