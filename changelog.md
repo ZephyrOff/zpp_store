@@ -20,3 +20,4 @@
 ## [0.4.0] - 2025-08-01
 - Modification du listing des clés
 - Ajustement de code
+- Amélioration de la gestion des clés lors du push/pull
