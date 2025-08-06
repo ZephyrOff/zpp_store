@@ -21,3 +21,7 @@
 - Modification du listing des clés
 - Ajustement de code
 - Amélioration de la gestion des clés lors du push/pull
+
+## [0.5.0] - 2025-08-06
+- Ajout des méthodes get(), set(), pop(), clear(), delete()
+- Ajout de l'utilisation des formats dictionnaires
