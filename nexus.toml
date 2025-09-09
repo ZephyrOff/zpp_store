@@ -1,6 +1,6 @@
 [project]
 name = "zpp_store"
-version = "0.5.0"
+version = "0.5.1"
 description = "Système de sérialisation de données"
 mainfile = "__init__.py"
 requires-python = ">=3.8"
@@ -24,13 +24,14 @@ documentation = "https://github.com/ZephyrOff/zpp_store"
 [project.dependencies]
 PyYAML = "N.A"
 msgpack = "N.A"
+cryptography = "N.A"
 
 [project.dependencies.windows]
 
 [project.dependencies.linux]
 
 [project.build]
-packages = ["PyYAML", "msgpack"]
+packages = ["PyYAML", "msgpack", "cryptography"]
 includes = ["PyYAML"]
 excludes = []
 include_files = []

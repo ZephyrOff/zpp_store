@@ -25,3 +25,6 @@
 ## [0.5.0] - 2025-08-06
 - Ajout des méthodes get(), set(), pop(), clear(), delete()
 - Ajout de l'utilisation des formats dictionnaires
+
+## [0.5.1] - 2025-09-09
+- Correction des requirements
